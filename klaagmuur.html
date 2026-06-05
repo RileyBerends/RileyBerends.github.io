@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klaagmuur</title>
+
+  <style>
+    /* ALGEMEEN */
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #111827, #7c3aed);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 760px;
+      padding: 40px 0;
+    }
+
+    h1 {
+      font-size: 46px;
+      margin-bottom: 12px;
+      color: #facc15;
+    }
+
+    p {
+      color: #e5e7eb;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* TIJD VERSPILD */
+    #waste-timer {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      background: rgba(17, 24, 39, 0.9);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: bold;
+      z-index: 9000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+    #waste-time {
+      color: #facc15;
+    }
+
+    /* TERUGKNOP */
+    .back-button {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      background: white;
+      color: #111827;
+      text-decoration: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-weight: bold;
+      z-index: 5002;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+      transform: scale(1.05);
+    }
+
+    /* FORMULIER */
+    .complaint-box {
+      background: white;
+      color: #111827;
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      box-sizing: border-box;
+      resize: vertical;
+      border: 2px solid #d1d5db;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+    }
+
+    textarea:disabled {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .counter {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #6b7280;
+      text-align: right;
+    }
+
+    /* EISEN */
+    .requirements {
+      margin-top: 18px;
+      background: #f3f4f6;
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .requirements-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .requirement {
+      margin: 8px 0;
+      color: #dc2626;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .requirement.good {
+      color: #16a34a;
+    }
+
+    /* KNOP */
+    .submit-button {
+      margin-top: 18px;
+      width: 100%;
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 16px 22px;
+      border-radius: 16px;
+      font-size: 19px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+      transition:
+        transform 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    .submit-button:hover {
+      background: #dc2626;
+      transform: scale(1.02);
+    }
+
+    .submit-button:active {
+      transform: scale(0.95) rotate(-1deg);
+      box-shadow: 0 5px 16px rgba(0,0,0,0.25);
+    }
+
+    .submit-button.loading {
+      background: #f59e0b;
+      cursor: wait;
+    }
+
+    .submit-button.sent {
+      background: #16a34a;
+      cursor: default;
+    }
+
+    .submit-button:disabled {
+      opacity: 0.95;
+    }
+
+    .shake {
+      animation: shake 0.35s ease;
+    }
+
+    @keyframes shake {
+      0% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-8px);
+      }
+
+      50% {
+        transform: translateX(8px);
+      }
+
+      75% {
+        transform: translateX(-5px);
+      }
+
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    /* POPUP */
+    #popup-background {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    #popup {
+      background: white;
+      color: #111827;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+      text-align: center;
+      animation: popupIn 0.25s ease;
+    }
+
+    #popup h2 {
+      margin-top: 0;
+      color: #ef4444;
+    }
+
+    #popup.success h2 {
+      color: #16a34a;
+    }
+
+    #popup-message {
+      color: #374151;
+      font-size: 17px;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    #popup button {
+      background: #111827;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #popup button:hover {
+      background: #374151;
+    }
+
+    @keyframes popupIn {
+      from {
+        opacity: 0;
+        transform: scale(0.85) translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* MOBIEL */
+    @media (max-width: 600px) {
+      #waste-timer {
+        left: 12px;
+        bottom: 12px;
+        font-size: 12px;
+        padding: 10px 12px;
+      }
+
+      .back-button {
+        top: 12px;
+        left: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      .complaint-box {
+        padding: 22px;
+      }
+
+      textarea {
+        min-height: 140px;
+      }
+
+      .container {
+        padding-top: 80px;
+        padding-bottom: 90px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Tijd verspild -->
+  <div id="waste-timer">
+    Tijd verspild: <span id="waste-time">0 seconden</span>
+  </div>
+
+  <!-- Terugknop -->
+  <a class="back-button" href="index.html">← Terug</a>
+
+  <div class="container">
+    <h1>Klaagmuur</h1>
+
+    <p>
+      Mocht je een klacht hebben over deze website, dan kun je contact opnemen met de eigenaar.
+      Alvast bedankt voor je moeite.
+    </p>
+
+    <div class="complaint-box">
+      <form id="complaint-form">
+        <label for="complaint-text">Typ hier je klacht:</label>
+
+        <textarea
+          id="complaint-text"
+          placeholder="Bijvoorbeeld: Deze website heeft mijn tijd verspild!"
+        ></textarea>
+
+        <div class="counter">
+          Tekens: <span id="character-count">0</span>
+        </div>
+
+        <div class="requirements">
+          <div class="requirements-title">Uw klacht moet voldoen aan deze totaal redelijke eisen:</div>
+
+          <div class="requirement" id="rule-empty">✖ Er moet überhaupt iets ingevuld zijn.</div>
+          <div class="requirement" id="rule-min">✖ Minimaal 30 tekens gebruiken.</div>
+          <div class="requirement" id="rule-max">✖ Maximaal 220 tekens gebruiken. We hebben ook niet de hele dag.</div>
+          <div class="requirement" id="rule-special">✖ Minimaal één speciaal teken gebruiken, zoals !, ?, @ of #.</div>
+          <div class="requirement" id="rule-uppercase">✖ Minimaal één hoofdletter gebruiken. Klaag met klasse.</div>
+          <div class="requirement" id="rule-angry">✖ Minimaal één klachtwaardig woord gebruiken.</div>
+        </div>
+
+        <button class="submit-button" id="submit-button" type="submit">
+          Verstuur klacht
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup -->
+  <div id="popup-background">
+    <div id="popup">
+      <h2 id="popup-title">Oeps.</h2>
+      <p id="popup-message">Er is iets fout gegaan.</p>
+      <button id="popup-close">Oké dan</button>
+    </div>
+  </div>
+
+  <script>
+    /* KLAAGMUUR */
+    const complaintForm = document.getElementById("complaint-form");
+    const complaintText = document.getElementById("complaint-text");
+    const characterCount = document.getElementById("character-count");
+
+    const submitButton = document.getElementById("submit-button");
+
+    const popupBackground = document.getElementById("popup-background");
+    const popup = document.getElementById("popup");
+    const popupTitle = document.getElementById("popup-title");
+    const popupMessage = document.getElementById("popup-message");
+    const popupClose = document.getElementById("popup-close");
+
+    const rules = {
+      empty: document.getElementById("rule-empty"),
+      min: document.getElementById("rule-min"),
+      max: document.getElementById("rule-max"),
+      special: document.getElementById("rule-special"),
+      uppercase: document.getElementById("rule-uppercase"),
+      angry: document.getElementById("rule-angry")
+    };
+
+    const angryWords = [
+ "slecht",
+  "kut",
+  "klote",
+  "kanker",
+  "tyfus",
+  "tering",
+  "godver",
+  "godverdomme",
+  "verdomme",
+  "shit",
+  "fuck",
+  "fucking",
+  "irritant",
+  "belachelijk",
+  "stom",
+  "dom",
+  "waardeloos",
+  "nutteloos",
+  "zinloos",
+  "klacht",
+  "klagen",
+  "boos",
+  "kwaad",
+  "woedend",
+  "geïrriteerd",
+  "geirriteerd",
+  "schaam",
+  "schaamte",
+  "vreselijk",
+  "verschrikkelijk",
+  "drama",
+  "dramatisch",
+  "rommel",
+  "bagger",
+  "troep",
+  "rotzooi",
+  "bende",
+  "haat",
+  "haten",
+  "vervelend",
+  "mislukt",
+  "fout",
+  "kapot",
+  "stuk",
+  "werkt niet",
+  "doet het niet",
+  "niet leuk",
+  "niet grappig",
+  "saai",
+  "lelijk",
+  "traag",
+  "langzaam",
+  "waardeloos",
+  "onzin",
+  "flut",
+  "prut",
+  "ellende",
+  "probleem",
+  "problemen",
+  "teleurstelling",
+  "teleurgesteld",
+  "jammer",
+  "spijt",
+  "verpest",
+  "waardeloos",
+  "ruk",
+  "baggerzooi",
+  "kutzooi",
+  "schijt",
+  "schijtirritant"
+    ];
+
+    const successMessages = [
+      "Je klacht is verstuurd. Ik doe er niks mee.",
+      "Je klacht is succesvol ontvangen en direct genegeerd.",
+      "Bedankt voor je klacht. Hij is toegevoegd aan de stapel 'maakt niet uit'.",
+      "Je klacht is verstuurd naar de eigenaar. De eigenaar heeft net gedaan alsof hij slaapt.",
+      "Verstuurd. Er gebeurt verder helemaal niks.",
+      "Je klacht is aangekomen. Helaas is dat ook het einde van dit proces.",
+      "Succesvol verstuurd. Verwachte reactietijd: nooit.",
+      "Je klacht staat nu veilig opgeslagen in Riley's denkbeeldige administratie.",
+      "Bedankt. Je klacht wordt behandeld met dezelfde urgentie als een lege batterij in een afstandsbediening.",
+      "Je klacht is verstuurd. Ik waardeer je bijdrage aan de totale hoeveelheid gezeur."
+    ];
+
+    let complaintWasSent = false;
+
+    complaintText.addEventListener("input", () => {
+      characterCount.textContent = complaintText.value.length;
+      updateRules();
+      resetButtonIfNeeded();
+    });
+
+    complaintForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      if (complaintWasSent) {
+        showPopup(
+          "Rustig aan.",
+          "Je klacht is al verstuurd. Ik ging er toen al niks mee doen.",
+          false
+        );
+        return;
+      }
+
+      const validation = getValidation();
+
+      if (!validation.valid) {
+        submitButton.classList.remove("shake");
+        void submitButton.offsetWidth;
+        submitButton.classList.add("shake");
+
+        showPopup("Niet verstuurd.", validation.reason, false);
+        return;
+      }
+
+      submitComplaintFake();
+    });
+
+    function getValidation() {
+      const complaint = complaintText.value.trim();
+      const length = complaint.length;
+
+      if (length === 0) {
+        return {
+          valid: false,
+          reason: "Je moet wel eerst iets typen. Ik kan geen lege klacht versturen om daarna te negeren."
+        };
+      }
+
+      if (length < 30) {
+        return {
+          valid: false,
+          reason: "Je klacht is te kort. Je moet nog " + (30 - length) + " tekens gebruiken."
+        };
+      }
+
+      if (length > 220) {
+        return {
+          valid: false,
+          reason: "Je klacht is te lang. Je hebt " + (length - 220) + " tekens te veel gebruikt."
+        };
+      }
+
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(complaint)) {
+        return {
+          valid: false,
+          reason: "Je klacht mist een speciaal teken. Gebruik bijvoorbeeld !, ?, @ of #. Waarom? Omdat het kan."
+        };
+      }
+
+      if (!/[A-Z]/.test(complaint)) {
+        return {
+          valid: false,
+          reason: "Je klacht mist een hoofdletter. Klaag alsof je ergens voor staat."
+        };
+      }
+
+      if (!hasAngryWord(complaint)) {
+        return {
+          valid: false,
+          reason: "Je klacht mist een klachtwaardig woord, zoals 'belachelijk', 'slecht', 'stom', 'drama' of iets in die richting."
+        };
+      }
+
+      return {
+        valid: true,
+        reason: ""
+      };
+    }
+
+    function updateRules() {
+      const complaint = complaintText.value.trim();
+      const length = complaint.length;
+
+      setRule(rules.empty, length > 0, "Er moet überhaupt iets ingevuld zijn.");
+      setRule(rules.min, length >= 30, "Minimaal 30 tekens gebruiken.");
+      setRule(rules.max, length <= 220 && length > 0, "Maximaal 220 tekens gebruiken. We hebben ook niet de hele dag.");
+      setRule(rules.special, /[!@#$%^&*(),.?":{}|<>]/.test(complaint), "Minimaal één speciaal teken gebruiken, zoals !, ?, @ of #.");
+      setRule(rules.uppercase, /[A-Z]/.test(complaint), "Minimaal één hoofdletter gebruiken. Klaag met klasse.");
+      setRule(rules.angry, hasAngryWord(complaint), "Minimaal één klachtwaardig woord gebruiken.");
+    }
+
+    function setRule(element, passed, text) {
+      if (passed) {
+        element.classList.add("good");
+        element.textContent = "✔ " + text;
+      } else {
+        element.classList.remove("good");
+        element.textContent = "✖ " + text;
+      }
+    }
+
+    function hasAngryWord(text) {
+      const lowerText = text.toLowerCase();
+
+      return angryWords.some(word => lowerText.includes(word));
+    }
+
+    function getSpecialComplaintResponse(text) {
+      const complaint = text.toLowerCase();
+
+      const herkenning = [
+        {
+          woorden: ["tijd verspild", "tijdverspilling", "verspilde tijd", "mijn tijd", "kost tijd", "tijd gekost"],
+          antwoord: "Je klacht is verstuurd. Maar eerlijk: je tijd was al verspild zodra je deze website opende."
+        },
+        {
+          woorden: ["poep", "stront", "schijt", "drol", "poepgame"],
+          antwoord: "Je klacht over poep is ontvangen. Helaas valt dit binnen de kernfunctionaliteit van deze website."
+        },
+        {
+          woorden: ["rickroll", "gerickrolld", "rick astley", "never gonna give you up"],
+          antwoord: "Je klacht over de Rickroll is afgewezen. Je bent zelf op een verdachte knop gaan klikken."
+        },
+        {
+          woorden: ["bier", "grolsch", "pils", "alcohol"],
+          antwoord: "Je klacht bevat bier. Deze wordt automatisch omgezet naar een compliment."
+        },
+        {
+          woorden: ["lelijk", "slecht design", "ziet er niet uit", "mooier", "design"],
+          antwoord: "Je klacht over het design is ontvangen. Helaas noemt de eigenaar dit gewoon stijl."
+        },
+        {
+          woorden: ["traag", "langzaam", "laadt niet", "laden", "snelheid"],
+          antwoord: "Je klacht over snelheid is ontvangen. De website doet gewoon rustig aan. Dat mag ook eens."
+        },
+        {
+          woorden: ["bug", "fout", "werkt niet", "kapot", "mislukt"],
+          antwoord: "Je klacht over een fout is ontvangen. Volgens de eigenaar is dit geen bug, maar karakter."
+        },
+        {
+          woorden: ["kut", "klote", "irritant", "belachelijk", "stom", "waardeloos"],
+          antwoord: "Je klacht klinkt boos genoeg. Hij is verstuurd naar de afdeling 'joh, wat vervelend'."
+        },
+        {
+          woorden: ["riley", "eigenaar"],
+          antwoord: "Je klacht over de eigenaar is ontvangen. De eigenaar heeft besloten zichzelf vrij te spreken."
+        },
+        {
+          woorden: ["404", "pagina bestaat niet", "niet gevonden"],
+          antwoord: "Je klacht over een ontbrekende pagina is ontvangen. Waarschijnlijk heb jij gewoon iets verkeerd gedaan."
+        },
+        {
+          woorden: ["timer", "tijd verspild timer", "tijdverspilling timer"],
+          antwoord: "Je klacht over de timer is ontvangen. De timer telt ondertussen vrolijk verder. Dat is zijn werk."
+        },
+        {
+          woorden: ["telefoon", "mobiel", "iphone", "safari"],
+          antwoord: "Je klacht over mobiel gebruik is ontvangen. De website doet zijn best, jouw telefoon waarschijnlijk ook."
+        },
+        {
+          woorden: ["achterhoek", "normaal", "boogie"],
+          antwoord: "Je klacht bevat Achterhoekse signalen. Deze klacht wordt met voorrang genegeerd onder het genot van bier."
+        }
+      ];
+
+      for (const groep of herkenning) {
+        if (groep.woorden.some(woord => complaint.includes(woord))) {
+          return groep.antwoord;
+        }
+      }
+
+      return null;
+    }
+
+    function submitComplaintFake() {
+      submitButton.classList.add("loading");
+      submitButton.textContent = "Klacht wordt verstuurd...";
+
+      complaintText.disabled = true;
+      submitButton.disabled = true;
+
+      setTimeout(() => {
+        complaintWasSent = true;
+
+        submitButton.classList.remove("loading");
+        submitButton.classList.add("sent");
+        submitButton.textContent = "Verstuurd";
+
+        const specialResponse = getSpecialComplaintResponse(complaintText.value);
+
+        if (specialResponse) {
+          showPopup("Verstuurd.", specialResponse, true);
+        } else {
+          const randomSuccess =
+            successMessages[Math.floor(Math.random() * successMessages.length)];
+
+          showPopup("Verstuurd.", randomSuccess, true);
+        }
+      }, 1800);
+    }
+
+    function resetButtonIfNeeded() {
+      if (!complaintWasSent) {
+        submitButton.classList.remove("loading", "sent");
+        submitButton.textContent = "Verstuur klacht";
+        submitButton.disabled = false;
+      }
+    }
+
+    function showPopup(title, message, success) {
+      popupTitle.textContent = title;
+      popupMessage.textContent = message;
+
+      if (success) {
+        popup.classList.add("success");
+      } else {
+        popup.classList.remove("success");
+      }
+
+      popupBackground.style.display = "flex";
+    }
+
+    popupClose.addEventListener("click", () => {
+      popupBackground.style.display = "none";
+    });
+
+    popupBackground.addEventListener("click", (event) => {
+      if (event.target === popupBackground) {
+        popupBackground.style.display = "none";
+      }
+    });
+
+    updateRules();
+
+    /* TIJD VERSPILD */
+    const wasteTimeText = document.getElementById("waste-time");
+
+    let totalWastedSeconds = Number(localStorage.getItem("totalWastedSeconds")) || 0;
+
+    function showWasteTimer() {
+      const hours = Math.floor(totalWastedSeconds / 3600);
+      const minutes = Math.floor((totalWastedSeconds % 3600) / 60);
+      const seconds = totalWastedSeconds % 60;
+
+      if (hours > 0) {
+        wasteTimeText.textContent =
+          hours + " uur, " + minutes + " minuten en " + seconds + " seconden";
+      } else if (minutes > 0) {
+        wasteTimeText.textContent =
+          minutes + " minuten en " + seconds + " seconden";
+      } else {
+        wasteTimeText.textContent = seconds + " seconden";
+      }
+    }
+
+    showWasteTimer();
+
+    setInterval(() => {
+      totalWastedSeconds++;
+      localStorage.setItem("totalWastedSeconds", totalWastedSeconds);
+      showWasteTimer();
+    }, 1000);
+  </script>
+
+</body>
+</html>
